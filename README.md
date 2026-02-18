@@ -11,6 +11,12 @@ AI-powered gift discovery experience that helps customers find the perfect gift 
 
 ## Quick Start
 
+### Clone repo
+```powershell
+git clone https://github.com/pritamrp/edible-poc.git
+cd edible-poc
+```
+
 ### First-time setup (run once)
 
 #### Backend
@@ -60,20 +66,6 @@ API Docs: http://localhost:8000/docs
 Note: Re-run `alembic upgrade head` if you delete `backend/edible_poc.db` or pull new migrations.
 
 ---
-
-## Deploy on Render
-
-`run_dev.ps1` is for local Windows development. On Render, run the backend and frontend as two services.
-
-Backend service (FastAPI):
-- Build command: `pip install -r requirements.txt`
-- Start command: `cd backend && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- Env vars: `OPENAI_API_KEY` (required), `CORS_ORIGINS` (set to your frontend URL), optional `DATABASE_URL`
-
-Frontend service (Next.js):
-- Build command: `cd frontend && npm ci && npm run build`
-- Start command: `cd frontend && npx next start -p $PORT`
-- Env var: `NEXT_PUBLIC_API_URL` = `https://<your-backend>.onrender.com/api`
 
 ## System Architecture
 
@@ -289,8 +281,18 @@ Edible/
 ### Backend (`backend/.env`)
 ```env
 OPENAI_API_KEY=sk-proj-your-key-here
+
+# Optional overrides
 DATABASE_URL=sqlite:///./edible_poc.db
 EDIBLE_API_URL=https://www.ediblearrangements.com/api/search/
+INTENT_MODEL=gpt-4o
+CURATION_MODEL=gpt-4o-mini
+
+# Comma-separated. Use "*" to allow all (credentials will be disabled).
+CORS_ORIGINS=http://localhost:3000
+
+# Set to false to reduce SQL logs
+SQLALCHEMY_ECHO=true
 ```
 
 ### Frontend (`frontend/.env.local`)
