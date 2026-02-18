@@ -34,6 +34,11 @@ npm install
 
 ### Daily run
 
+#### One-command dev run (Windows PowerShell)
+```powershell
+.\run_dev.ps1
+```
+
 #### Backend
 ```powershell
 # from the repo root
