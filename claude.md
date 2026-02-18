@@ -6,24 +6,48 @@
 
 ## Quick Start
 
-### 1. Start Backend
+### First-time setup (run once)
+
+#### Backend
 ```powershell
-cd C:\Users\prita\Desktop\Edible
+# from the repo root
+python -m venv .venv
+.\.venv\Scripts\Activate
+pip install -r requirements.txt
+
+cd backend
+Copy-Item .env.example .env
+# edit backend\.env and set OPENAI_API_KEY
+alembic upgrade head
+```
+
+#### Frontend
+```powershell
+cd frontend
+npm install
+```
+
+### Daily run
+
+#### Backend
+```powershell
+# from the repo root
 .\.venv\Scripts\Activate
 cd backend
 uvicorn app.main:app --reload --port 8000
 ```
 
-### 2. Start Frontend
+#### Frontend
 ```powershell
-cd C:\Users\prita\Desktop\Edible\frontend
-npm install
+cd frontend
 npm run dev
 ```
 
-### 3. Open App
-- Frontend: http://localhost:3000
-- API Docs: http://localhost:8000/docs
+### Open app
+Frontend: http://localhost:3000  
+API Docs: http://localhost:8000/docs
+
+Note: Re-run `alembic upgrade head` if you delete `backend/edible_poc.db` or pull new migrations.
 
 ---
 
