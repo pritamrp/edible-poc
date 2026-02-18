@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./edible_poc.db"
     openai_api_key: str = ""
     edible_api_url: str = "https://www.ediblearrangements.com/api/search/"
+    cors_origins: str = "http://localhost:3000"
+    sqlalchemy_echo: bool = True
 
     # Model configuration
     intent_model: str = "gpt-4o"  # Strong reasoning for intent

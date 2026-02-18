@@ -61,6 +61,20 @@ Note: Re-run `alembic upgrade head` if you delete `backend/edible_poc.db` or pul
 
 ---
 
+## Deploy on Render
+
+`run_dev.ps1` is for local Windows development. On Render, run the backend and frontend as two services.
+
+Backend service (FastAPI):
+- Build command: `pip install -r requirements.txt`
+- Start command: `cd backend && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Env vars: `OPENAI_API_KEY` (required), `CORS_ORIGINS` (set to your frontend URL), optional `DATABASE_URL`
+
+Frontend service (Next.js):
+- Build command: `cd frontend && npm ci && npm run build`
+- Start command: `cd frontend && npx next start -p $PORT`
+- Env var: `NEXT_PUBLIC_API_URL` = `https://<your-backend>.onrender.com/api`
+
 ## System Architecture
 
 ```

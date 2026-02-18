@@ -1,11 +1,14 @@
 from logging.config import fileConfig
+import os
 
 from sqlalchemy import create_engine, pool
+from sqlalchemy.engine import make_url
 
 from alembic import context
 
 from app.base import Base
 from app.models import Session, Conversation, IntentLog, ProductClick  # noqa: F401
+from app.config import get_settings
 
 config = context.config
 
@@ -16,8 +19,11 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    # Use sync SQLite URL for migrations
-    return "sqlite:///./edible_poc.db"
+    raw_url = os.getenv("DATABASE_URL") or get_settings().database_url
+    url = make_url(raw_url)
+    if url.drivername == "sqlite+aiosqlite":
+        url = url.set(drivername="sqlite")
+    return str(url)
 
 
 def run_migrations_offline() -> None:
@@ -36,9 +42,12 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
+    url = make_url(get_url())
+    connect_args = {"check_same_thread": False} if url.get_backend_name() == "sqlite" else {}
     connectable = create_engine(
-        get_url(),
+        str(url),
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
 
     with connectable.connect() as connection:
