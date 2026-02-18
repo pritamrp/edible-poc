@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edible Gift Concierge - System Design</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 40px;
+        }
+        h1 {
+            text-align: center;
+            color: #E10700;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+        h2 {
+            text-align: center;
+            color: #666;
+            font-weight: normal;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .diagram-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .diagram-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #E10700;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .export-btn {
+            display: inline-block;
+            background: #E10700;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+        }
+        .export-btn:hover {
+            background: #C20600;
+        }
+        .export-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Edible Gift Concierge</h1>
+        <h2>System Architecture Diagram</h2>
+
+        <div class="export-section">
+            <button class="export-btn" onclick="window.print()">Print / Save as PDF</button>
+            <a class="export-btn" href="https://mermaid.live" target="_blank">Edit in Mermaid Live</a>
+        </div>
+
+        <!-- Main Architecture Diagram -->
+        <div class="diagram-section">
+            <h3>System Architecture</h3>
+            <div class="mermaid">
+flowchart TB
+    subgraph Browser["🌐 User Browser"]
+        subgraph Frontend["Next.js 14 Frontend<br/>localhost:3000"]
+            direction TB
+            Wizard["4-Step Gift Wizard<br/>Occasion → Recipient → Prompt → Products"]
+            GC["GiftConcierge<br/>(State Orchestrator)"]
+            APIClient["lib/api.ts<br/>HTTP Client"]
+            Wizard --> GC --> APIClient
+        end
+    end
+
+    subgraph Backend["⚡ FastAPI Backend<br/>localhost:8000"]
+        direction TB
+        subgraph Routers["API Routers"]
+            Chat["POST /api/chat"]
+            Search["POST /api/search"]
+            Analytics["POST /api/analytics/*"]
+        end
+        subgraph Services["Services"]
+            Intent["Intent Service<br/>GPT-4o"]
+            Curation["Curation Service<br/>GPT-4o-mini"]
+            Edible["Edible Client"]
+        end
+        Chat --> Intent & Curation
+        Search --> Edible
+    end
+
+    subgraph External["🌍 External Services"]
+        OpenAI["OpenAI API"]
+        EdibleAPI["Edible Search API"]
+    end
+
+    subgraph DB["💾 SQLite Database"]
+        Tables["sessions | conversations<br/>intent_logs | product_clicks"]
+    end
+
+    APIClient -->|"HTTP/JSON"| Routers
+    Intent & Curation -->|"API Calls"| OpenAI
+    Edible -->|"Product Search"| EdibleAPI
+    Routers -->|"Persist"| DB
+            </div>
+        </div>
+
+        <!-- Data Flow Diagram -->
+        <div class="diagram-section">
+            <h3>Request/Response Flow</h3>
+            <div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant FE as Frontend
+    participant BE as Backend
+    participant AI as OpenAI
+    participant EA as Edible API
+    participant DB as Database
+
+    U->>FE: Select Occasion & Recipient
+    FE->>FE: Generate Prompt
+    U->>FE: Confirm/Customize Prompt
+    FE->>BE: POST /api/chat
+
+    BE->>DB: Create Session
+    BE->>AI: Extract Intent (GPT-4o)
+    AI-->>BE: Intent JSON
+    BE->>DB: Log Intent
+
+    BE->>EA: Search Products
+    EA-->>BE: 50 Products
+
+    BE->>AI: Curate Products (GPT-4o-mini)
+    AI-->>BE: Selected 3-5 Products + Reply
+
+    BE-->>FE: Response (products, reply, session_id)
+    FE->>FE: Display Product Grid
+
+    U->>FE: Click Product 👍
+    FE->>BE: POST /api/analytics/click
+    BE->>DB: Log Click
+    FE->>U: Open Product Page
+            </div>
+        </div>
+
+        <!-- Component Diagram -->
+        <div class="diagram-section">
+            <h3>Frontend Component Hierarchy</h3>
+            <div class="mermaid">
+flowchart TD
+    subgraph Page["page.tsx"]
+        subgraph GC["GiftConcierge (Orchestrator)"]
+            SI["StepIndicator<br/>Progress 1-2-3-4"]
+
+            subgraph Steps["Wizard Steps"]
+                S1["OccasionQuickStart<br/>Birthday, Thank You, etc."]
+                S2["RecipientStep<br/>Spouse, Parents, Custom"]
+                S3["PromptStep<br/>Suggested + Custom Input"]
+                S4["ProductGrid<br/>Product Cards"]
+            end
+
+            PC["ProductCard<br/>Image, Price, 👍👎"]
+            PD["ProductDetails<br/>Modal View"]
+            FO["FeedbackOptions<br/>Refinement"]
+
+            S4 --> PC
+            PC -->|"Thumbs Up"| PD
+            S4 -->|"All Rejected"| FO
+        end
+    end
+
+    style GC fill:#fff5f5,stroke:#E10700
+    style Steps fill:#f5f5f5,stroke:#999
+            </div>
+        </div>
+
+        <!-- Database Schema -->
+        <div class="diagram-section">
+            <h3>Database Schema</h3>
+            <div class="mermaid">
+erDiagram
+    sessions ||--o{ conversations : has
+    sessions ||--o{ intent_logs : has
+    sessions ||--o{ product_clicks : has
+
+    sessions {
+        string id PK
+        datetime created_at
+        datetime updated_at
+        boolean converted
+    }
+
+    conversations {
+        string id PK
+        string session_id FK
+        string role
+        text content
+        datetime created_at
+    }
+
+    intent_logs {
+        string id PK
+        string session_id FK
+        string occasion
+        string urgency
+        string recipient
+        string budget
+        text dietary
+        text keywords
+        float confidence
+        datetime created_at
+    }
+
+    product_clicks {
+        string id PK
+        string session_id FK
+        string sku
+        string name
+        int position
+        datetime created_at
+    }
+            </div>
+        </div>
+
+        <!-- Tech Stack -->
+        <div class="diagram-section">
+            <h3>Technology Stack</h3>
+            <div class="mermaid">
+mindmap
+    root((Edible Gift<br/>Concierge))
+        Frontend
+            Next.js 14
+            React 18
+            TypeScript
+            Tailwind CSS
+            Framer Motion
+        Backend
+            Python 3.11+
+            FastAPI
+            SQLAlchemy 2.0
+            Pydantic
+            httpx
+        Database
+            SQLite
+            Alembic
+        AI/ML
+            OpenAI GPT-4o
+            OpenAI GPT-4o-mini
+        External
+            Edible Search API
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #E10700;"></div>
+                <span>Primary (Edible Red)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #333;"></div>
+                <span>Backend Services</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4A90A4;"></div>
+                <span>External APIs</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #F5A623;"></div>
+                <span>Database</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#E10700',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#C20600',
+                lineColor: '#666',
+                secondaryColor: '#f5f5f5',
+                tertiaryColor: '#fff',
+                fontSize: '14px'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            sequence: {
+                useMaxWidth: true,
+                actorMargin: 50
+            }
+        });
+    </script>
+</body>
+</html>

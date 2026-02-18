@@ -1,0 +1,60 @@
+# --- OS / Editor ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+.claude/
+
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# dotenv (keep examples committed explicitly if needed)
+.env
+.env.*
+!.env.example
+!.env.template
+
+# --- Backend artifacts ---
+backend/*.db
+backend/*.db-journal
+backend/*.sqlite
+backend/*.sqlite3
+
+# --- Node / Next.js ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+.next/
+out/
+dist/
+*.tsbuildinfo
+
+# Next.js env (keep examples committed explicitly if needed)
+frontend/.env.local
+frontend/.env.*.local
+
+# --- Misc ---
+*.log
+AI Application Developer - Technical Assessment.pdf

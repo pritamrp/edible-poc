@@ -1,0 +1,67 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#E10700', 'primaryTextColor': '#fff', 'primaryBorderColor': '#C20600', 'lineColor': '#333', 'secondaryColor': '#F5F5F5', 'tertiaryColor': '#fff'}}}%%
+
+flowchart TB
+    subgraph Browser["🌐 User Browser"]
+        subgraph Frontend["Next.js 14 Frontend (localhost:3000)"]
+            direction TB
+
+            subgraph Wizard["4-Step Gift Wizard"]
+                Step1["Step 1<br/>Occasion"]
+                Step2["Step 2<br/>Recipient"]
+                Step3["Step 3<br/>Prompt"]
+                Step4["Step 4<br/>Products"]
+                Step1 --> Step2 --> Step3 --> Step4
+            end
+
+            GC["GiftConcierge<br/>(Orchestrator)"]
+            API["lib/api.ts<br/>HTTP Client"]
+
+            Wizard --> GC
+            GC --> API
+        end
+    end
+
+    subgraph Backend["FastAPI Backend (localhost:8000)"]
+        direction TB
+
+        subgraph Routers["API Routers"]
+            ChatAPI["POST /api/chat<br/>Main AI Chat"]
+            SearchAPI["POST /api/search<br/>Product Search"]
+            AnalyticsAPI["POST /api/analytics/*<br/>Click Tracking"]
+        end
+
+        subgraph Services["Services Layer"]
+            Intent["intent_service<br/>GPT-4o"]
+            Curation["curation_service<br/>GPT-4o-mini"]
+            EdibleClient["edible_client<br/>API Proxy"]
+        end
+
+        ChatAPI --> Intent
+        ChatAPI --> Curation
+        SearchAPI --> EdibleClient
+    end
+
+    subgraph External["External APIs"]
+        OpenAI["OpenAI API<br/>GPT-4o / GPT-4o-mini"]
+        EdibleAPI["Edible Search API<br/>POST /api/search/"]
+    end
+
+    subgraph Database["SQLite Database"]
+        Sessions[(sessions)]
+        Conversations[(conversations)]
+        IntentLogs[(intent_logs)]
+        Clicks[(product_clicks)]
+    end
+
+    API -->|HTTP/REST| ChatAPI
+    API -->|HTTP/REST| SearchAPI
+    API -->|HTTP/REST| AnalyticsAPI
+
+    Intent -->|Extract Intent| OpenAI
+    Curation -->|Curate Products| OpenAI
+    EdibleClient -->|Fetch Products| EdibleAPI
+
+    ChatAPI --> Sessions
+    ChatAPI --> Conversations
+    ChatAPI --> IntentLogs
+    AnalyticsAPI --> Clicks

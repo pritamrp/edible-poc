@@ -1,0 +1,95 @@
+@startuml Edible Gift Concierge - System Architecture
+
+!define RECTANGLE class
+!define ICONURL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master
+
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 12
+
+skinparam component {
+    BackgroundColor White
+    BorderColor #333
+    ArrowColor #666
+}
+
+skinparam node {
+    BackgroundColor #F5F5F5
+    BorderColor #999
+}
+
+skinparam database {
+    BackgroundColor #FFF5E6
+    BorderColor #F5A623
+}
+
+skinparam cloud {
+    BackgroundColor #E6F3FF
+    BorderColor #4A90A4
+}
+
+title **Edible Gift Concierge - System Architecture**
+
+node "User Browser" {
+    package "Next.js 14 Frontend\nlocalhost:3000" as frontend #FFF5F5 {
+        component "4-Step Wizard" as wizard {
+            [Step 1: Occasion] as s1
+            [Step 2: Recipient] as s2
+            [Step 3: Prompt] as s3
+            [Step 4: Products] as s4
+            s1 -right-> s2
+            s2 -right-> s3
+            s3 -right-> s4
+        }
+        component "GiftConcierge\n(Orchestrator)" as gc
+        component "lib/api.ts\nHTTP Client" as api
+
+        wizard -down-> gc
+        gc -down-> api
+    }
+}
+
+node "FastAPI Backend\nlocalhost:8000" as backend {
+    package "Routers" {
+        [POST /api/chat] as chatRouter
+        [POST /api/search] as searchRouter
+        [POST /api/analytics/*] as analyticsRouter
+    }
+
+    package "Services" {
+        [Intent Service\nGPT-4o] as intentService
+        [Curation Service\nGPT-4o-mini] as curationService
+        [Edible Client] as edibleClient
+    }
+
+    chatRouter -down-> intentService
+    chatRouter -down-> curationService
+    searchRouter -down-> edibleClient
+}
+
+cloud "External APIs" {
+    [OpenAI API\nGPT-4o / GPT-4o-mini] as openai
+    [Edible Search API\nPOST /api/search/] as edibleApi
+}
+
+database "SQLite\nedible_poc.db" as db {
+    [sessions]
+    [conversations]
+    [intent_logs]
+    [product_clicks]
+}
+
+' Connections
+api -down-> chatRouter : HTTP/JSON
+api -down-> searchRouter
+api -down-> analyticsRouter
+
+intentService -down-> openai : Extract Intent
+curationService -down-> openai : Curate Products
+edibleClient -down-> edibleApi : Fetch Products
+
+chatRouter -down-> db
+analyticsRouter -down-> db
+
+@enduml
